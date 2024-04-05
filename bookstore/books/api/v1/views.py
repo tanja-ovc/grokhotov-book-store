@@ -3,7 +3,9 @@ from django_filters.rest_framework import DjangoFilterBackend
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, viewsets
 
-from books.api.v1.serializers import BookSerializer, CategoriesListSerializer
+from books.api.v1.serializers import (
+    BooksSerializer, CategoriesSerializer, SingleBookSerializer
+)
 from books.api.v1.filters import BookFilterSet
 from books.models import Book, Category
 
@@ -13,7 +15,7 @@ from books.models import Book, Category
 ))
 class CategoriesListAPIView(generics.ListAPIView):
     queryset = Category.objects.all()
-    serializer_class = CategoriesListSerializer
+    serializer_class = CategoriesSerializer
 
 
 @method_decorator(name='list', decorator=swagger_auto_schema(
@@ -24,7 +26,13 @@ class CategoriesListAPIView(generics.ListAPIView):
     operation_summary='Получение данных о конкретной книге'
 ))
 class BooksReadOnlyViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Book.objects.all()
-    serializer_class = BookSerializer
+    queryset = Book.objects.prefetch_related('authors', 'categories')
     filter_backends = (DjangoFilterBackend,)
     filterset_class = BookFilterSet
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return BooksSerializer
+        elif self.action == 'retrieve':
+            return SingleBookSerializer
+

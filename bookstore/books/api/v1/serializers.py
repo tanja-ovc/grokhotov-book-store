@@ -10,7 +10,7 @@ class SubcategorySerializer(serializers.ModelSerializer):
         fields = ('id', 'title')
 
 
-class CategoriesListSerializer(serializers.ModelSerializer):
+class CategoriesSerializer(serializers.ModelSerializer):
     subcategories = SubcategorySerializer(many=True, read_only=True)
 
     class Meta:
@@ -34,18 +34,26 @@ class AuthorSerializer(serializers.ModelSerializer):
 
 class RelatedBookSerializer(serializers.ModelSerializer):
     authors = serializers.StringRelatedField(many=True)
-    categories = serializers.StringRelatedField(many=True)
+
+    class Meta:
+        model = Book
+        fields = ('id', 'title', 'thumbnail', 'authors')
+
+
+class BooksSerializer(serializers.ModelSerializer):
+    authors = AuthorSerializer(many=True, read_only=True)
+    categories = CategorySerializer(many=True, read_only=True)
 
     class Meta:
         model = Book
         fields = (
-            'id', 'title', 'thumbnail', 'authors', 'categories'
+            'id', 'title', 'isbn', 'pageCount', 'publishedDate',
+            'thumbnail', 'shortDescription', 'longDescription', 'status',
+            'authors', 'categories'
         )
 
 
-class BookSerializer(serializers.ModelSerializer):
-    authors = AuthorSerializer(many=True, read_only=True)
-    categories = CategorySerializer(many=True, read_only=True)
+class SingleBookSerializer(BooksSerializer):
     related_books = serializers.SerializerMethodField()
 
     class Meta:
